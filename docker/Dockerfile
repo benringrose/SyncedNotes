@@ -4,9 +4,10 @@
 #
 # The source is fetched with ADD from a Git URL. For a private repository, pass a GitHub personal access token as
 # the build secret GIT_AUTH_TOKEN (docker-compose.yml does this with GIT_PAT from .env). BuildKit uses it only to
-# fetch the repository, and it never ends up in an image layer or the image history:
+# fetch the repository, and it never ends up in an image layer or the image history. Without Compose, put the token
+# in the GIT_PAT environment variable and run:
 #
-#   GIT_PAT=<token> docker build --secret id=GIT_AUTH_TOKEN,env=GIT_PAT -t syncednotes .
+#   docker build --secret id=GIT_AUTH_TOKEN,env=GIT_PAT -t syncednotes .
 #
 # BuildKit checks the branch for new commits on every build, so building again picks up the latest code.
 
