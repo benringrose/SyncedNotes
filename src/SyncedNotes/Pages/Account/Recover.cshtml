@@ -1,0 +1,30 @@
+@page
+@model SyncedNotes.Pages.Account.RecoverModel
+@{
+    ViewData["Title"] = "Use a recovery code";
+}
+
+<h1 class="auth-title">Use a recovery code</h1>
+<p class="auth-subtitle">
+    Enter your username and one of the recovery codes you saved when you created your account.
+    Each code works once. Afterwards, add a new passkey in <em>Settings → Security</em>.
+</p>
+
+<div id="authAlert" class="alert d-none" role="alert" aria-live="polite"></div>
+
+<form id="recoverForm" novalidate>
+    <div class="mb-3">
+        <label for="userName" class="form-label">Username</label>
+        <input id="userName" class="form-control" required autocomplete="username" autocapitalize="none" spellcheck="false" />
+    </div>
+    <div class="mb-4">
+        <label for="code" class="form-label">Recovery code</label>
+        <input id="code" class="form-control font-monospace text-uppercase" required autocomplete="one-time-code"
+               autocapitalize="characters" spellcheck="false" placeholder="XXXXX-XXXXX" maxlength="16" />
+    </div>
+    <button type="submit" id="btnRecover" class="btn btn-primary btn-lg w-100">Sign in</button>
+</form>
+
+<div class="auth-links">
+    <a href="/Account/Login">Back to passkey sign-in</a>
+</div>

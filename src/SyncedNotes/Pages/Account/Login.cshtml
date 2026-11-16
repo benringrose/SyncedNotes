@@ -1,0 +1,41 @@
+@page
+@model SyncedNotes.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Sign in";
+}
+
+<h1 class="auth-title">Welcome back</h1>
+<p class="auth-subtitle">Sign in with the passkey saved on this device, your phone or a security key.</p>
+
+@if (Model.Message is not null)
+{
+    <div class="alert alert-info">@Model.Message</div>
+}
+<div id="authAlert" class="alert d-none" role="alert" aria-live="polite"></div>
+<div id="unsupported" class="alert alert-warning d-none">
+    This browser doesn't support passkeys. Try a recent version of Edge, Chrome, Safari or Firefox.
+</div>
+
+<form id="loginForm" data-return-url="@Model.ReturnUrl" novalidate>
+    <div class="mb-3">
+        <label for="userName" class="form-label">Username <span class="text-body-secondary small">(optional)</span></label>
+        <input id="userName" name="userName" class="form-control" autocomplete="username webauthn"
+               autocapitalize="none" spellcheck="false" placeholder="Leave blank to pick a passkey" />
+    </div>
+    <div class="form-check mb-4">
+        <input class="form-check-input" type="checkbox" id="rememberMe" checked />
+        <label class="form-check-label" for="rememberMe">Keep me signed in on this device</label>
+    </div>
+    <button type="submit" id="btnPasskeyLogin" class="btn btn-primary btn-lg w-100">
+        <i class="bi bi-fingerprint me-1"></i> Sign in with a passkey
+    </button>
+</form>
+
+<div class="auth-links">
+    <a href="/Account/Recover">Lost your passkey? Use a recovery code</a>
+    @if (Model.RegistrationOpen)
+    {
+        <span aria-hidden="true">·</span>
+        <a href="/Account/Register">Create an account</a>
+    }
+</div>

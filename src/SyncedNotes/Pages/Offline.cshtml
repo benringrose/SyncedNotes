@@ -1,0 +1,15 @@
+@page "/offline"
+@model SyncedNotes.Pages.OfflineModel
+@{
+    ViewData["Title"] = "Offline";
+}
+
+<h1 class="auth-title"><i class="bi bi-wifi-off"></i> You're offline</h1>
+<p class="auth-subtitle">
+    This page needs a connection. If you've used SyncedNotes on this device before, your notes are still
+    here – open the app and keep writing; everything syncs when you're back online.
+</p>
+<div class="d-flex gap-2">
+    <a class="btn btn-primary flex-fill" href="/">Open my notes</a>
+    <button type="button" class="btn btn-outline-secondary flex-fill" data-action="retry">Try again</button>
+</div>

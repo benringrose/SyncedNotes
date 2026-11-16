@@ -1,0 +1,122 @@
+<!-- Command palette -->
+<div class="modal palette" id="paletteModal" tabindex="-1" aria-label="Command palette" aria-hidden="true">
+    <div class="modal-dialog palette-dialog">
+        <div class="modal-content">
+            <div class="palette-input-wrap">
+                <i class="bi bi-search"></i>
+                <input id="paletteInput" class="palette-input" placeholder="Search notes, or type > for commands" autocomplete="off"
+                       spellcheck="false" role="combobox" aria-expanded="true" aria-controls="paletteList" aria-autocomplete="list" />
+                <kbd>Esc</kbd>
+            </div>
+            <ul class="palette-list" id="paletteList" role="listbox"></ul>
+            <div class="palette-footer">
+                <span><kbd>↑</kbd> <kbd>↓</kbd> navigate</span>
+                <span><kbd>Enter</kbd> open</span>
+                <span><kbd>&gt;</kbd> commands</span>
+                <span><kbd>#</kbd> tags</span>
+                <span><kbd>@@</kbd> binders</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h2 class="modal-title fs-5" id="confirmTitle"></h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="confirmBody"></div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="confirmCancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmOk">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Prompt -->
+<div class="modal fade" id="promptModal" tabindex="-1" aria-labelledby="promptTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" id="promptForm" autocomplete="off">
+            <div class="modal-header border-0 pb-0">
+                <h2 class="modal-title fs-5" id="promptTitle"></h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label" for="promptInput" id="promptLabel"></label>
+                <input class="form-control" id="promptInput" />
+                <div class="form-text" id="promptHelp"></div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="promptOk">OK</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Colour & icon picker (notes and binders) -->
+<div class="modal fade" id="styleModal" tabindex="-1" aria-labelledby="styleTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" id="styleForm" autocomplete="off">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="styleTitle">Colour &amp; icon</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3" id="styleNameRow" hidden>
+                    <label class="form-label" for="styleName">Name</label>
+                    <input class="form-control" id="styleName" maxlength="60" required />
+                </div>
+                <div class="mb-3">
+                    <div class="form-label">Colour</div>
+                    <div class="swatches" id="styleSwatches"></div>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <ul class="nav nav-pills nav-sm" id="styleIconTabs" role="tablist">
+                            <li class="nav-item"><button type="button" class="nav-link py-1 px-2 active" data-icon-tab="icons">Icons</button></li>
+                            <li class="nav-item"><button type="button" class="nav-link py-1 px-2" data-icon-tab="emoji">Emoji</button></li>
+                        </ul>
+                        <button type="button" class="btn btn-sm btn-link" id="styleClearIcon">No icon</button>
+                    </div>
+                    <input class="form-control form-control-sm mb-2" id="styleIconSearch" placeholder="Filter icons…" />
+                    <div class="icon-grid" id="styleIconGrid"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="styleSave">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Keyboard shortcuts -->
+<div class="modal fade" id="shortcutsModal" tabindex="-1" aria-labelledby="shortcutsTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-md-down">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="shortcutsTitle"><i class="bi bi-keyboard"></i> Keyboard shortcuts</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body"><div class="shortcut-grid" id="shortcutsBody"></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- Note info -->
+<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="infoTitle">Note info</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body"><dl class="row mb-0 small" id="infoBody"></dl></div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,12 @@
+{
+  "name": "syncednotes-e2e",
+  "private": true,
+  "description": "End-to-end tests for SyncedNotes (Playwright + virtual WebAuthn authenticator)",
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 app.test.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  }
+}

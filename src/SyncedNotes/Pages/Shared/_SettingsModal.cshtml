@@ -1,0 +1,280 @@
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-fullscreen-md-down settings-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="settingsTitle"><i class="bi bi-gear"></i> Settings</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-layout">
+                    <div class="settings-nav">
+                        <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
+                            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#set-general" type="button" role="tab"><i class="bi bi-sliders"></i>General</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#set-editor" type="button" role="tab"><i class="bi bi-pencil-square"></i>Editor</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#set-security" type="button" role="tab" data-settings-tab="security"><i class="bi bi-shield-lock"></i>Security</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#set-integrations" type="button" role="tab" data-settings-tab="integrations"><i class="bi bi-plug"></i>Integrations</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#set-data" type="button" role="tab" data-settings-tab="data"><i class="bi bi-database"></i>Data &amp; sync</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#set-about" type="button" role="tab"><i class="bi bi-info-circle"></i>About</button>
+                        </div>
+                    </div>
+                    <div class="settings-content tab-content">
+                        <!-- General -->
+                        <div class="tab-pane fade show active" id="set-general" role="tabpanel" tabindex="0">
+                            <div class="settings-section">
+                                <h3>Appearance</h3>
+                                <p class="desc">Your theme is remembered on this device and synced to your other devices.</p>
+                                <div class="setting-row">
+                                    <label>Theme</label>
+                                    <div class="btn-group" role="group" id="setTheme">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="auto"><i class="bi bi-circle-half"></i> System</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="light"><i class="bi bi-sun"></i> Light</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="dark"><i class="bi bi-moon-stars"></i> Dark</button>
+                                    </div>
+                                </div>
+                                <div class="setting-row">
+                                    <label>Note list</label>
+                                    <div class="btn-group" role="group" id="setViewMode">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="list"><i class="bi bi-list-ul"></i> List</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="grid"><i class="bi bi-grid-3x2-gap"></i> Cards</button>
+                                    </div>
+                                </div>
+                                <div class="setting-row">
+                                    <label for="setSort">Sort notes by</label>
+                                    <div class="d-flex gap-2">
+                                        <select class="form-select form-select-sm" id="setSort">
+                                            <option value="updated">Date modified</option>
+                                            <option value="created">Date created</option>
+                                            <option value="title">Title</option>
+                                            <option value="manual">Custom (drag &amp; drop)</option>
+                                        </select>
+                                        <select class="form-select form-select-sm" id="setSortDir" aria-label="Sort direction">
+                                            <option value="desc">Descending</option>
+                                            <option value="asc">Ascending</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="setting-row">
+                                    <label for="setShowSnippets">Show note previews in the list</label>
+                                    <div class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" id="setShowSnippets" /></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Editor -->
+                        <div class="tab-pane fade" id="set-editor" role="tabpanel" tabindex="0">
+                            <div class="settings-section">
+                                <h3>Writing</h3>
+                                <div class="setting-row">
+                                    <label>Default view for notes</label>
+                                    <div class="btn-group" role="group" id="setEditorMode">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="edit"><i class="bi bi-pencil"></i> Edit</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="split"><i class="bi bi-layout-split"></i> Split</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="preview"><i class="bi bi-eye"></i> Preview</button>
+                                    </div>
+                                </div>
+                                <div class="setting-row">
+                                    <label for="setFont">Editor font</label>
+                                    <select class="form-select form-select-sm" id="setFont">
+                                        <option value="sans">Sans-serif</option>
+                                        <option value="serif">Serif</option>
+                                        <option value="mono">Monospace</option>
+                                    </select>
+                                </div>
+                                <div class="setting-row">
+                                    <label for="setFontSize">Text size</label>
+                                    <select class="form-select form-select-sm" id="setFontSize">
+                                        <option value="13">Small</option>
+                                        <option value="15">Medium</option>
+                                        <option value="17">Large</option>
+                                        <option value="19">Extra large</option>
+                                    </select>
+                                </div>
+                                <div class="setting-row">
+                                    <label for="setSpellcheck">Check spelling</label>
+                                    <div class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" id="setSpellcheck" /></div>
+                                </div>
+                                <div class="setting-row">
+                                    <label for="setToolbar">Show formatting toolbar</label>
+                                    <div class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" id="setToolbar" /></div>
+                                </div>
+                                <div class="setting-row">
+                                    <label for="setSyncScroll">Keep editor and preview scrolled together</label>
+                                    <div class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" id="setSyncScroll" /></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security -->
+                        <div class="tab-pane fade" id="set-security" role="tabpanel" tabindex="0">
+                            <div class="settings-section">
+                                <h3>Passkeys</h3>
+                                <p class="desc">Passkeys let you sign in with Windows Hello, Touch ID, Face ID, your phone or a security key. Add one for each device you use.</p>
+                                <div class="list-card mb-2" id="passkeyList"><div class="list-card-row text-body-secondary">Loading…</div></div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="btnAddPasskey"><i class="bi bi-plus-lg"></i> Add a passkey</button>
+                            </div>
+                            <div class="settings-section">
+                                <h3>App lock</h3>
+                                <p class="desc">Hide your notes behind a lock screen when you step away. Unlock with your passkey or an optional PIN. The lock is enforced by the server too, so it can't be bypassed in the browser.</p>
+                                <div class="setting-row">
+                                    <label for="lockEnabled">Enable app lock</label>
+                                    <div class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" id="lockEnabled" /></div>
+                                </div>
+                                <div class="setting-row">
+                                    <label for="lockTimeout">Lock automatically</label>
+                                    <select class="form-select form-select-sm" id="lockTimeout">
+                                        <option value="0">When I leave the app</option>
+                                        <option value="1">After 1 minute</option>
+                                        <option value="5">After 5 minutes</option>
+                                        <option value="15">After 15 minutes</option>
+                                        <option value="30">After 30 minutes</option>
+                                        <option value="60">After 1 hour</option>
+                                        <option value="240">After 4 hours</option>
+                                        <option value="-1">Never (only when I lock it)</option>
+                                    </select>
+                                </div>
+                                <div class="setting-row">
+                                    <label for="lockOnLaunch">Lock every time the app is opened</label>
+                                    <div class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" id="lockOnLaunch" /></div>
+                                </div>
+                                <div class="setting-row">
+                                    <div>
+                                        <div>Unlock PIN</div>
+                                        <div class="small text-body-secondary" id="pinStatus">Not set</div>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnSetPin">Set PIN</button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" id="btnRemovePin" hidden>Remove</button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-secondary btn-sm mt-2" data-cmd="app.lock"><i class="bi bi-lock"></i> Lock now</button>
+                            </div>
+                            <div class="settings-section">
+                                <h3>Recovery codes</h3>
+                                <p class="desc">One-time codes for signing in if you lose your passkeys. <span id="recoveryRemaining"></span></p>
+                                <div id="newCodesBox" class="token-reveal mb-2" hidden>
+                                    <p class="small mb-2"><strong>Save these now.</strong> They replace your previous codes and won't be shown again.</p>
+                                    <ol class="recovery-codes mb-2" id="newCodesList"></ol>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btnCopyNewCodes"><i class="bi bi-clipboard"></i> Copy</button>
+                                </div>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnNewCodes"><i class="bi bi-arrow-repeat"></i> Generate new codes</button>
+                            </div>
+                            <div class="settings-section">
+                                <h3>Account</h3>
+                                <div class="setting-row">
+                                    <label for="setDisplayName">Display name</label>
+                                    <div class="d-flex gap-2">
+                                        <input class="form-control form-control-sm" id="setDisplayName" maxlength="64" />
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnSaveDisplayName">Save</button>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap mt-2">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-cmd="account.signout"><i class="bi bi-box-arrow-right"></i> Sign out</button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" id="btnDeleteAccount"><i class="bi bi-person-x"></i> Delete account…</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Integrations -->
+                        <div class="tab-pane fade" id="set-integrations" role="tabpanel" tabindex="0">
+                            <div class="settings-section">
+                                <h3><i class="bi bi-windows"></i> PowerToys Command Palette</h3>
+                                <p class="desc">
+                                    If you use <strong>Microsoft PowerToys</strong>, you can add notes straight from its Command Palette
+                                    (<kbd>Win</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd>).
+                                </p>
+                                <p class="small mb-2"><strong>No install needed:</strong> open Command Palette → <em>Bookmarks</em> → <em>Add bookmark</em>, and use a URL below.
+                                    Command Palette asks for each <code>{placeholder}</code> when you run the bookmark.</p>
+                                <div class="mb-2">
+                                    <label class="form-label small mb-1">New note (just type it)</label>
+                                    <div class="copy-field"><input class="form-control form-control-sm" readonly id="cmdpalNewUrl" /><button type="button" class="btn btn-sm btn-outline-secondary" data-copy="#cmdpalNewUrl" title="Copy"><i class="bi bi-clipboard"></i></button></div>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small mb-1">New note with a title</label>
+                                    <div class="copy-field"><input class="form-control form-control-sm" readonly id="cmdpalTitleUrl" /><button type="button" class="btn btn-sm btn-outline-secondary" data-copy="#cmdpalTitleUrl" title="Copy"><i class="bi bi-clipboard"></i></button></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small mb-1">Search notes</label>
+                                    <div class="copy-field"><input class="form-control form-control-sm" readonly id="cmdpalSearchUrl" /><button type="button" class="btn btn-sm btn-outline-secondary" data-copy="#cmdpalSearchUrl" title="Copy"><i class="bi bi-clipboard"></i></button></div>
+                                </div>
+                                <p class="small text-body-secondary mb-0">
+                                    <strong>Native extension (optional):</strong> the source for a Command Palette extension that adds and searches notes
+                                    without opening a browser is in <code>tools/PowerToys</code> in the repository. Create an API token below and enter it in the extension's settings.
+                                </p>
+                            </div>
+                            <div class="settings-section">
+                                <h3>Quick-add links</h3>
+                                <p class="desc">Any app or bookmark can create a note by opening <code>/new</code> with <code>title</code>, <code>text</code>, <code>tags</code> and <code>binder</code> parameters. When installed, SyncedNotes also appears in your device's share menu.</p>
+                                <p class="small mb-0">Bookmarklet – drag to your bookmarks bar to save the current page as a note:
+                                    <a class="btn btn-sm btn-outline-primary ms-1" id="bookmarklet" href="#">+ SyncedNotes</a></p>
+                            </div>
+                            <div class="settings-section">
+                                <h3>API tokens</h3>
+                                <p class="desc">Tokens let integrations (like the PowerToys extension) add and search notes. They can't change settings or delete anything.</p>
+                                <div id="tokenReveal" class="token-reveal mb-3" hidden>
+                                    <p class="small mb-2"><strong>Copy your new token now</strong> – it won't be shown again.</p>
+                                    <div class="copy-field"><input class="form-control form-control-sm" readonly id="tokenValue" /><button type="button" class="btn btn-sm btn-primary" data-copy="#tokenValue"><i class="bi bi-clipboard"></i> Copy</button></div>
+                                </div>
+                                <div class="list-card mb-2" id="tokenList"></div>
+                                <form class="d-flex gap-2" id="tokenForm">
+                                    <input class="form-control form-control-sm" id="tokenName" placeholder="Token name, e.g. PowerToys on my PC" maxlength="100" />
+                                    <button type="submit" class="btn btn-outline-primary btn-sm text-nowrap"><i class="bi bi-key"></i> Create token</button>
+                                </form>
+                                <p class="small text-body-secondary mt-2 mb-0">API base URL: <code id="apiBaseUrl"></code></p>
+                            </div>
+                        </div>
+
+                        <!-- Data -->
+                        <div class="tab-pane fade" id="set-data" role="tabpanel" tabindex="0">
+                            <div class="settings-section">
+                                <h3>Sync</h3>
+                                <p class="desc">Notes are saved on this device first and synced in the background whenever you're online.</p>
+                                <div class="list-card mb-2">
+                                    <div class="list-card-row"><span class="grow">Status</span><span id="dataSyncState"></span></div>
+                                    <div class="list-card-row"><span class="grow">Last synced</span><span id="dataLastSync"></span></div>
+                                    <div class="list-card-row"><span class="grow">Changes waiting to sync</span><span id="dataPending"></span></div>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" data-cmd="sync.now"><i class="bi bi-arrow-repeat"></i> Sync now</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btnResync"><i class="bi bi-cloud-download"></i> Re-download everything</button>
+                                </div>
+                            </div>
+                            <div class="settings-section">
+                                <h3>Export &amp; import</h3>
+                                <p class="desc">Export every note as Markdown files (with front matter and images) in a .zip, or import .md and .txt files. You can also drop Markdown files anywhere in the app.</p>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a class="btn btn-outline-secondary btn-sm" href="/api/export" id="btnExport" download><i class="bi bi-file-earmark-zip"></i> Export all notes</a>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-cmd="notes.import"><i class="bi bi-file-earmark-arrow-up"></i> Import Markdown files</button>
+                                </div>
+                            </div>
+                            <div class="settings-section">
+                                <h3>Storage on this device</h3>
+                                <p class="desc" id="storageInfo">Checking…</p>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnPersist"><i class="bi bi-hdd"></i> Keep my notes on this device</button>
+                            </div>
+                        </div>
+
+                        <!-- About -->
+                        <div class="tab-pane fade" id="set-about" role="tabpanel" tabindex="0">
+                            <div class="settings-section">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <img src="/icons/icon.svg" width="56" height="56" alt="" />
+                                    <div>
+                                        <h3 class="mb-0">SyncedNotes</h3>
+                                        <div class="text-body-secondary small">Version <span id="aboutVersion"></span></div>
+                                    </div>
+                                </div>
+                                <p>Offline-first Markdown notes. Built with ASP.NET Core, Entity Framework Core and SQLite, Bootstrap and jQuery.</p>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-cmd="help.shortcuts"><i class="bi bi-keyboard"></i> Keyboard shortcuts</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-cmd="app.install" data-install-only hidden><i class="bi bi-download"></i> Install app</button>
+                            </div>
+                            <div class="settings-section">
+                                <h3>Open-source components</h3>
+                                <p class="small text-body-secondary mb-0">Bootstrap &amp; Bootstrap Icons (MIT), jQuery (MIT), marked (MIT), DOMPurify (Apache-2.0 / MPL-2.0), highlight.js (BSD-3-Clause), SortableJS (MIT). License files are in <code>/lib</code>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

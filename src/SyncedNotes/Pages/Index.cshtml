@@ -1,0 +1,272 @@
+﻿@page
+@model IndexModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <partial name="_Head" />
+    <link rel="stylesheet" href="~/css/markdown.css" asp-append-version="true" />
+    <title>SyncedNotes</title>
+</head>
+<body class="app-body" data-view-mode="list">
+    <a class="visually-hidden-focusable" href="#noteList">Skip to notes</a>
+
+    <div id="appBoot" class="app-boot" role="status">
+        <img src="/icons/icon.svg" alt="" />
+        <p id="appBootText">Opening your notes…</p>
+    </div>
+
+    <div id="appBanner" hidden></div>
+
+    <div id="app" class="app" hidden>
+        <!-- ============================== Sidebar ============================== -->
+        <aside id="sidebar" class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" aria-label="Navigation">
+            <div class="sidebar-header">
+                <a class="brand" href="#/"><img src="/icons/icon.svg" width="28" height="28" alt="" /><span>SyncedNotes</span></a>
+                <button type="button" class="btn-close d-lg-none" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close menu"></button>
+            </div>
+            <div class="sidebar-actions">
+                <button type="button" class="btn btn-primary w-100 btn-new-note" data-cmd="note.new">
+                    <i class="bi bi-plus-lg"></i><span>New note</span><kbd class="d-none d-lg-inline">Alt N</kbd>
+                </button>
+            </div>
+            <nav class="sidebar-scroll" aria-label="Notes">
+                <ul class="nav-list" id="navViews">
+                    <li><a class="nav-item" href="#/" data-view="all" data-drop="all"><i class="bi bi-journal-text"></i><span class="label">All notes</span><span class="count"></span></a></li>
+                    <li><a class="nav-item" href="#/pinned" data-view="pinned" data-drop="pinned"><i class="bi bi-pin-angle"></i><span class="label">Pinned</span><span class="count"></span></a></li>
+                    <li><a class="nav-item" href="#/unfiled" data-view="unfiled" data-drop="unfiled"><i class="bi bi-inbox"></i><span class="label">Unfiled</span><span class="count"></span></a></li>
+                    <li><a class="nav-item" href="#/archive" data-view="archive" data-drop="archive"><i class="bi bi-archive"></i><span class="label">Archive</span><span class="count"></span></a></li>
+                    <li><a class="nav-item" href="#/trash" data-view="trash" data-drop="trash"><i class="bi bi-trash3"></i><span class="label">Trash</span><span class="count"></span></a></li>
+                </ul>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">
+                        <span>Binders</span>
+                        <button type="button" class="btn btn-icon btn-sm" data-cmd="binder.new" title="New binder" aria-label="New binder"><i class="bi bi-plus-lg"></i></button>
+                    </div>
+                    <ul class="nav-list" id="navBinders"></ul>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header"><span>Tags</span></div>
+                    <ul class="nav-list" id="navTags"></ul>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="dropup">
+                    <button type="button" class="btn btn-icon" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu" title="Account">
+                        <span class="avatar" id="userAvatar">?</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><h6 class="dropdown-header" id="userMenuName"></h6></li>
+                        <li><button type="button" class="dropdown-item" data-cmd="settings.open"><i class="bi bi-gear"></i>Settings<span class="shortcut">Ctrl ,</span></button></li>
+                        <li><button type="button" class="dropdown-item" data-cmd="help.shortcuts"><i class="bi bi-keyboard"></i>Keyboard shortcuts<span class="shortcut">?</span></button></li>
+                        <li><button type="button" class="dropdown-item" data-cmd="app.install" data-install-only hidden><i class="bi bi-download"></i>Install app</button></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><button type="button" class="dropdown-item" data-cmd="app.lock"><i class="bi bi-lock"></i>Lock app<span class="shortcut">Ctrl Shift L</span></button></li>
+                        <li><button type="button" class="dropdown-item" data-cmd="account.signout"><i class="bi bi-box-arrow-right"></i>Sign out</button></li>
+                    </ul>
+                </div>
+                <button type="button" class="sync-status" id="syncStatus" data-cmd="sync.now" data-state="synced" title="Sync now">
+                    <i class="bi bi-cloud-check"></i><span>Synced</span>
+                </button>
+                <div class="d-flex">
+                    <button type="button" class="btn btn-icon" data-cmd="theme.cycle" id="btnTheme" title="Theme"><i class="bi bi-circle-half"></i></button>
+                    <button type="button" class="btn btn-icon" data-cmd="app.lock" title="Lock app (Ctrl+Shift+L)" aria-label="Lock app"><i class="bi bi-lock"></i></button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ============================== Note list ============================== -->
+        <section id="listPane" class="list-pane" aria-label="Note list">
+            <header class="pane-header">
+                <button type="button" class="btn btn-icon d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Open menu"><i class="bi bi-list"></i></button>
+                <h1 class="pane-title" id="viewTitle">All notes</h1>
+                <div class="pane-tools">
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-icon" data-bs-toggle="dropdown" aria-expanded="false" title="Sort &amp; view" aria-label="Sort and view options">
+                            <i class="bi bi-sort-down"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" id="sortMenu">
+                            <li><h6 class="dropdown-header">Sort by</h6></li>
+                            <li><button type="button" class="dropdown-item" data-sort="updated"><i class="bi bi-pencil"></i>Date modified</button></li>
+                            <li><button type="button" class="dropdown-item" data-sort="created"><i class="bi bi-calendar-plus"></i>Date created</button></li>
+                            <li><button type="button" class="dropdown-item" data-sort="title"><i class="bi bi-sort-alpha-down"></i>Title</button></li>
+                            <li><button type="button" class="dropdown-item" data-sort="manual"><i class="bi bi-arrows-move"></i>Custom (drag &amp; drop)</button></li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li><button type="button" class="dropdown-item" data-sortdir="desc"><i class="bi bi-arrow-down"></i><span data-dir-label="desc">Newest first</span></button></li>
+                            <li><button type="button" class="dropdown-item" data-sortdir="asc"><i class="bi bi-arrow-up"></i><span data-dir-label="asc">Oldest first</span></button></li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li><h6 class="dropdown-header">View</h6></li>
+                            <li><button type="button" class="dropdown-item" data-viewmode="list"><i class="bi bi-list-ul"></i>List</button></li>
+                            <li><button type="button" class="dropdown-item" data-viewmode="grid"><i class="bi bi-grid-3x2-gap"></i>Cards</button></li>
+                        </ul>
+                    </div>
+                    <button type="button" class="btn btn-icon" data-cmd="view.toggle" id="btnViewToggle" title="Switch between list and cards (Alt+V)" aria-label="Switch view"><i class="bi bi-grid-3x2-gap"></i></button>
+                    <button type="button" class="btn btn-icon d-none d-md-inline-flex d-lg-none" data-cmd="note.new" title="New note" aria-label="New note"><i class="bi bi-plus-lg"></i></button>
+                </div>
+            </header>
+            <div class="search-box" role="search">
+                <i class="bi bi-search"></i>
+                <input type="search" id="searchInput" class="form-control" placeholder="Search notes   /" aria-label="Search notes" autocomplete="off" spellcheck="false" />
+            </div>
+            <div id="listBanner"></div>
+            <div class="note-list-scroll" id="noteListScroll">
+                <div id="noteList" class="note-list" aria-label="Notes"></div>
+                <div id="listEmpty" class="empty-state" hidden></div>
+            </div>
+        </section>
+
+        <div class="pane-resizer" id="paneResizer" role="separator" aria-orientation="vertical" aria-label="Resize note list" tabindex="0"></div>
+
+        <!-- ============================== Editor ============================== -->
+        <main id="editorPane" class="editor-pane" aria-label="Note">
+            <div id="editorEmpty" class="editor-empty">
+                <img src="/icons/icon.svg" alt="" />
+                <h2>No note selected</h2>
+                <p>Pick a note from the list or create a new one.</p>
+                <div class="hints">
+                    <span><kbd>Alt</kbd> <kbd>N</kbd> new note</span>
+                    <span><kbd>Ctrl</kbd> <kbd>K</kbd> command palette</span>
+                    <span><kbd>?</kbd> shortcuts</span>
+                </div>
+            </div>
+
+            <div id="editor" class="editor" hidden>
+                <header class="editor-header">
+                    <button type="button" class="btn btn-icon editor-back" data-cmd="note.close" title="Back to notes" aria-label="Back to notes"><i class="bi bi-arrow-left"></i></button>
+                    <div class="editor-crumbs">
+                        <div class="dropdown">
+                            <button type="button" class="btn-chip" id="binderPicker" data-bs-toggle="dropdown" aria-expanded="false" title="Move to binder">
+                                <i class="bi bi-folder2"></i><span class="label">Unfiled</span><i class="bi bi-chevron-down"></i>
+                            </button>
+                            <ul class="dropdown-menu" id="binderPickerMenu"></ul>
+                        </div>
+                    </div>
+                    <span class="save-status" id="saveStatus" aria-live="polite"></span>
+                    <div class="editor-actions">
+                        <div class="mode-toggle" role="group" aria-label="Editor mode">
+                            <button type="button" class="btn" data-mode="edit" title="Edit (Ctrl+E)" aria-label="Edit"><i class="bi bi-pencil"></i></button>
+                            <button type="button" class="btn" data-mode="split" title="Split view" aria-label="Split view"><i class="bi bi-layout-split"></i></button>
+                            <button type="button" class="btn" data-mode="preview" title="Preview (Ctrl+E)" aria-label="Preview"><i class="bi bi-eye"></i></button>
+                        </div>
+                        <button type="button" class="btn btn-icon" data-cmd="note.pin" id="btnPin" title="Pin (Alt+P)" aria-label="Pin note"><i class="bi bi-pin-angle"></i></button>
+                        <button type="button" class="btn btn-icon d-none d-sm-inline-flex" data-cmd="note.style" title="Colour &amp; icon" aria-label="Colour and icon"><i class="bi bi-palette"></i></button>
+                        <button type="button" class="btn btn-icon d-none d-sm-inline-flex" data-cmd="note.archive" id="btnArchive" title="Archive (Alt+A)" aria-label="Archive note"><i class="bi bi-archive"></i></button>
+                        <div class="dropdown">
+                            <button type="button" class="btn btn-icon" data-bs-toggle="dropdown" aria-expanded="false" title="More" aria-label="More actions"><i class="bi bi-three-dots-vertical"></i></button>
+                            <ul class="dropdown-menu dropdown-menu-end" id="noteMoreMenu">
+                                <li class="d-sm-none"><button type="button" class="dropdown-item" data-cmd="note.style"><i class="bi bi-palette"></i>Colour &amp; icon</button></li>
+                                <li class="d-sm-none"><button type="button" class="dropdown-item" data-cmd="note.archive"><i class="bi bi-archive"></i><span data-archive-label>Archive</span></button></li>
+                                <li><button type="button" class="dropdown-item" data-cmd="note.duplicate"><i class="bi bi-copy"></i>Duplicate</button></li>
+                                <li><button type="button" class="dropdown-item" data-cmd="note.export"><i class="bi bi-filetype-md"></i>Download as Markdown</button></li>
+                                <li><button type="button" class="dropdown-item" data-cmd="note.copyMarkdown"><i class="bi bi-clipboard"></i>Copy Markdown</button></li>
+                                <li><button type="button" class="dropdown-item" data-cmd="note.copyLink"><i class="bi bi-link-45deg"></i>Copy link</button></li>
+                                <li><button type="button" class="dropdown-item" data-cmd="note.print"><i class="bi bi-printer"></i>Print</button></li>
+                                <li><button type="button" class="dropdown-item" data-cmd="note.info"><i class="bi bi-info-circle"></i>Note info</button></li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li><button type="button" class="dropdown-item text-danger" data-cmd="note.trash"><i class="bi bi-trash3"></i>Move to trash<span class="shortcut">Alt Del</span></button></li>
+                            </ul>
+                        </div>
+                    </div>
+                </header>
+
+                <div id="editorBanner"></div>
+
+                <div class="editor-title-row">
+                    <button type="button" class="note-icon-btn" id="noteIconBtn" data-cmd="note.style" title="Change icon" aria-label="Change icon"><i class="bi bi-file-earmark-text"></i></button>
+                    <input id="noteTitle" class="note-title-input" placeholder="Untitled" maxlength="300" aria-label="Title" autocomplete="off" />
+                </div>
+                <div class="editor-tags" id="tagEditor">
+                    <span id="tagChips" class="d-contents"></span>
+                    <input id="tagInput" class="tag-input" placeholder="+ Add tag" aria-label="Add a tag" list="tagSuggestions" autocomplete="off" />
+                    <datalist id="tagSuggestions"></datalist>
+                </div>
+
+                <div class="md-toolbar" id="mdToolbar" role="toolbar" aria-label="Formatting">
+                    <button type="button" class="tb" data-md="undo" title="Undo (Ctrl+Z)" aria-label="Undo"><i class="bi bi-arrow-counterclockwise"></i></button>
+                    <button type="button" class="tb" data-md="redo" title="Redo (Ctrl+Y)" aria-label="Redo"><i class="bi bi-arrow-clockwise"></i></button>
+                    <span class="sep"></span>
+                    <button type="button" class="tb" data-md="bold" title="Bold (Ctrl+B)" aria-label="Bold"><i class="bi bi-type-bold"></i></button>
+                    <button type="button" class="tb" data-md="italic" title="Italic (Ctrl+I)" aria-label="Italic"><i class="bi bi-type-italic"></i></button>
+                    <button type="button" class="tb" data-md="strike" title="Strikethrough (Ctrl+Shift+X)" aria-label="Strikethrough"><i class="bi bi-type-strikethrough"></i></button>
+                    <div class="dropdown">
+                        <button type="button" class="tb" data-bs-toggle="dropdown" aria-expanded="false" title="Heading" aria-label="Heading"><i class="bi bi-type-h1"></i></button>
+                        <ul class="dropdown-menu">
+                            <li><button type="button" class="dropdown-item" data-md="h1"><i class="bi bi-type-h1"></i>Heading 1</button></li>
+                            <li><button type="button" class="dropdown-item" data-md="h2"><i class="bi bi-type-h2"></i>Heading 2</button></li>
+                            <li><button type="button" class="dropdown-item" data-md="h3"><i class="bi bi-type-h3"></i>Heading 3</button></li>
+                        </ul>
+                    </div>
+                    <span class="sep"></span>
+                    <button type="button" class="tb" data-md="ul" title="Bulleted list (Ctrl+Shift+8)" aria-label="Bulleted list"><i class="bi bi-list-ul"></i></button>
+                    <button type="button" class="tb" data-md="ol" title="Numbered list (Ctrl+Shift+7)" aria-label="Numbered list"><i class="bi bi-list-ol"></i></button>
+                    <button type="button" class="tb" data-md="task" title="Checklist (Ctrl+Shift+9)" aria-label="Checklist"><i class="bi bi-check2-square"></i></button>
+                    <button type="button" class="tb" data-md="quote" title="Quote" aria-label="Quote"><i class="bi bi-quote"></i></button>
+                    <span class="sep"></span>
+                    <button type="button" class="tb" data-md="code" title="Inline code (Ctrl+`)" aria-label="Inline code"><i class="bi bi-code"></i></button>
+                    <div class="dropdown">
+                        <button type="button" class="tb" data-bs-toggle="dropdown" aria-expanded="false" title="Code block" aria-label="Code block"><i class="bi bi-code-square"></i></button>
+                        <ul class="dropdown-menu code-lang-menu" id="codeLangMenu"></ul>
+                    </div>
+                    <button type="button" class="tb" data-md="link" title="Link (Ctrl+K)" aria-label="Link"><i class="bi bi-link-45deg"></i></button>
+                    <button type="button" class="tb" data-md="image" title="Insert image" aria-label="Insert image"><i class="bi bi-image"></i></button>
+                    <button type="button" class="tb" data-md="table" title="Table" aria-label="Table"><i class="bi bi-table"></i></button>
+                    <button type="button" class="tb" data-md="hr" title="Divider" aria-label="Divider"><i class="bi bi-dash-lg"></i></button>
+                </div>
+
+                <div class="editor-body" id="editorBody" data-mode="split">
+                    <div class="editor-input-wrap">
+                        <textarea id="noteContent" class="md-input" spellcheck="true" placeholder="Start writing… Markdown is supported. Paste or drop images here." aria-label="Note content"></textarea>
+                    </div>
+                    <div class="editor-preview-wrap" id="previewScroll">
+                        <article id="notePreview" class="markdown-body" aria-label="Preview"></article>
+                    </div>
+                    <div class="drop-overlay"><i class="bi bi-image"></i> Drop images to insert them</div>
+                </div>
+
+                <footer class="editor-footer">
+                    <span id="wordCount"></span>
+                    <span class="ms-auto" id="noteDates"></span>
+                </footer>
+            </div>
+        </main>
+
+        <button type="button" class="btn btn-primary fab" data-cmd="note.new" aria-label="New note"><i class="bi bi-plus-lg"></i></button>
+    </div>
+
+    <partial name="_LockScreen" />
+    <partial name="_AppModals" />
+    <partial name="_SettingsModal" />
+
+    <div class="toast-stack" id="toasts" aria-live="polite"></div>
+    <div class="app-drop-overlay" id="appDropOverlay" hidden><i class="bi bi-file-earmark-arrow-down"></i>Drop Markdown files to import them as notes</div>
+    <input type="file" id="imageFileInput" accept="image/*" multiple hidden />
+    <input type="file" id="importFileInput" accept=".md,.markdown,.txt,text/markdown,text/plain" multiple hidden />
+
+    <script src="~/lib/jquery/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/lib/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
+    <script src="~/lib/marked/marked.umd.min.js" asp-append-version="true"></script>
+    <script src="~/lib/dompurify/purify.min.js" asp-append-version="true"></script>
+    <script src="~/lib/highlight/highlight.bundle.min.js" asp-append-version="true"></script>
+    <script src="~/lib/sortable/Sortable.min.js" asp-append-version="true"></script>
+    <script src="~/js/core/util.js" asp-append-version="true"></script>
+    <script src="~/js/core/db.js" asp-append-version="true"></script>
+    <script src="~/js/core/sync.js" asp-append-version="true"></script>
+    <script src="~/js/core/passkeys.js" asp-append-version="true"></script>
+    <script src="~/js/app/ui.js" asp-append-version="true"></script>
+    <script src="~/js/app/store.js" asp-append-version="true"></script>
+    <script src="~/js/app/markdown.js" asp-append-version="true"></script>
+    <script src="~/js/app/history.js" asp-append-version="true"></script>
+    <script src="~/js/app/editor.js" asp-append-version="true"></script>
+    <script src="~/js/app/list.js" asp-append-version="true"></script>
+    <script src="~/js/app/sidebar.js" asp-append-version="true"></script>
+    <script src="~/js/app/commands.js" asp-append-version="true"></script>
+    <script src="~/js/app/lock.js" asp-append-version="true"></script>
+    <script src="~/js/app/settings.js" asp-append-version="true"></script>
+    <script src="~/js/app/pwa.js" asp-append-version="true"></script>
+    <script src="~/js/app/main.js" asp-append-version="true"></script>
+</body>
+</html>
