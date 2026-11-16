@@ -3,11 +3,11 @@
 Offline-first Markdown notes as an installable web app (PWA), built with **ASP.NET Core 10**, **Entity Framework Core** and **SQLite**, with **Bootstrap 5** and **jQuery** on the front end.
 Sign in with a **passkey**, write in Markdown with a live preview, and keep working without a connection. Everything syncs when you're back online.
 
-![SyncedNotes on the desktop: binders and tags in the sidebar, the note list, and the Markdown editor with a highlighted C# code block](docs/screenshots/desktop-light.jpg)
+![SyncedNotes on the desktop: binders and tags in the sidebar, the note list, and the Markdown editor with a highlighted C# code block](screenshots/desktop-light.jpg)
 
 <p>
-  <img src="docs/screenshots/desktop-dark-cards.jpg" alt="Card view in the dark theme with coloured notes" width="64%">
-  <img src="docs/screenshots/phone-note.jpg" alt="A note's preview on a phone" width="30%">
+  <img src="screenshots/desktop-dark-cards.jpg" alt="Card view in the dark theme with coloured notes" width="64%">
+  <img src="screenshots/phone-note.jpg" alt="A note's preview on a phone" width="30%">
 </p>
 
 ## Features
@@ -71,14 +71,14 @@ dotnet dev-certs https --trust
 ```
 
 ```bash
-dotnet run --project src/SyncedNotes --launch-profile https
+dotnet run --project SyncedNotes --launch-profile https
 ```
 
 Open <https://localhost:7022>. On the first visit you create your account: choose a username, then create a passkey with Windows Hello, Touch ID or Face ID, your phone, or a security key. Save the recovery codes it shows you.
 
 > Passkeys only work over **HTTPS** or on `localhost`, and they're tied to the host name. Decide on the final domain before you register (see `Passkeys:ServerDomain` below).
 
-The database is created and migrated automatically in `src/SyncedNotes/App_Data/syncednotes.db`.
+The database is created and migrated automatically in `SyncedNotes/App_Data/syncednotes.db`.
 
 ## Configuration
 
@@ -96,7 +96,7 @@ Settings live in `appsettings.json` and can be overridden with environment varia
 ## Deploying
 
 ```bash
-dotnet publish src/SyncedNotes -c Release -o ./publish
+dotnet publish SyncedNotes -c Release -o ./publish
 ```
 
 - Run it behind a reverse proxy that terminates HTTPS, such as Caddy, nginx, IIS or Azure App Service. Behind a proxy:
@@ -166,7 +166,7 @@ There are two ways to connect it. Both are described in detail in [`tools/PowerT
 ## Project layout
 
 ```
-src/SyncedNotes/
+SyncedNotes/
   Program.cs              Composition root: EF Core/SQLite, Identity + passkeys, cookies, rate limits, pipeline
   Data/                   Entities, AppDbContext, EF Core migrations
   Auth/                   Passkey sign-in, app-lock claim, recovery codes, API tokens, registration policy
@@ -209,7 +209,7 @@ End-to-end tests run against a real server in Chromium, with a virtual passkey a
 1. Start a server with registration open and an empty data folder:
 
    ```bash
-   Auth__Registration=Open DataDirectory=/tmp/sn-e2e dotnet run --project src/SyncedNotes --urls http://localhost:5177
+   Auth__Registration=Open DataDirectory=/tmp/sn-e2e dotnet run --project SyncedNotes --urls http://localhost:5177
    ```
 
 2. In another terminal, install the test tools:
@@ -230,7 +230,7 @@ End-to-end tests run against a real server in Chromium, with a virtual passkey a
    node screenshots.mjs
    ```
 
-To regenerate the icons after editing `src/SyncedNotes/wwwroot/icons/icon.svg` or `tools/icons/maskable.svg`, run `node tools/icons/render-icons.js` (this needs the `playwright` package).
+To regenerate the icons after editing `SyncedNotes/wwwroot/icons/icon.svg` or `tools/icons/maskable.svg`, run `node tools/icons/render-icons.js` (this needs the `playwright` package).
 
 ## Third-party components
 

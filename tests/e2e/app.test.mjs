@@ -1,7 +1,7 @@
 // End-to-end tests for SyncedNotes in Chromium, using a virtual WebAuthn authenticator (real passkey ceremonies).
 //
 // Start a server with registration open and an empty data folder, e.g.
-//   Auth__Registration=Open DataDirectory=/tmp/sn-e2e dotnet run --project src/SyncedNotes --urls http://localhost:5177
+//   Auth__Registration=Open DataDirectory=/tmp/sn-e2e dotnet run --project SyncedNotes --urls http://localhost:5177
 // then:
 //   cd tests/e2e && npm install && npx playwright install chromium && npm test
 // BASE_URL overrides the server address (default http://localhost:5177).

@@ -1,7 +1,7 @@
 // Captures the README and PWA install screenshots from a demo account.
 // Needs a server with registration open and an empty data folder (see app.test.mjs), then:
 //   node screenshots.mjs
-// Writes docs/screenshots/*.jpg and src/SyncedNotes/wwwroot/icons/screenshots/*.png.
+// Writes screenshots/*.jpg and SyncedNotes/wwwroot/icons/screenshots/*.png.
 import { chromium, devices } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -9,9 +9,9 @@ import { fileURLToPath } from 'node:url';
 
 const BASE = process.env.BASE_URL || 'http://localhost:5177';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const docs = resolve(root, 'docs/screenshots');
-const pwa = resolve(root, 'src/SyncedNotes/wwwroot/icons/screenshots');
-mkdirSync(docs, { recursive: true });
+const readmeShots = resolve(root, 'screenshots');
+const pwa = resolve(root, 'SyncedNotes/wwwroot/icons/screenshots');
+mkdirSync(readmeShots, { recursive: true });
 mkdirSync(pwa, { recursive: true });
 
 const DEMO = [
@@ -84,19 +84,19 @@ const open = async (title) => {
 await page.evaluate(() => window.SNTheme.set('light'));
 await open('API rate limiting');
 await page.mouse.move(0, 0);
-await page.screenshot({ path: `${docs}/desktop-light.jpg`, type: 'jpeg', quality: 88 });
+await page.screenshot({ path: `${readmeShots}/desktop-light.jpg`, type: 'jpeg', quality: 88 });
 
 // Desktop, dark, cards.
 await page.evaluate(() => { window.SNTheme.set('dark'); SN.app.closeNote(); return SN.store.setPrefs({ viewMode: 'grid' }); });
 await page.waitForTimeout(600);
-await page.screenshot({ path: `${docs}/desktop-dark-cards.jpg`, type: 'jpeg', quality: 88 });
+await page.screenshot({ path: `${readmeShots}/desktop-dark-cards.jpg`, type: 'jpeg', quality: 88 });
 
 // Command palette.
 await page.evaluate(() => SN.store.setPrefs({ viewMode: 'list' }));
 await page.keyboard.press('Control+KeyK');
 await page.keyboard.type('mar');
 await page.waitForTimeout(400);
-await page.screenshot({ path: `${docs}/command-palette.jpg`, type: 'jpeg', quality: 88 });
+await page.screenshot({ path: `${readmeShots}/command-palette.jpg`, type: 'jpeg', quality: 88 });
 await page.keyboard.press('Escape');
 
 // PWA install screenshots (1x, exact sizes declared in the manifest).
@@ -116,13 +116,13 @@ const p = await phone.newPage();
 await p.goto(`${BASE}/`);
 await p.waitForSelector('#app:not([hidden])');
 await p.waitForTimeout(1200);
-await p.screenshot({ path: `${docs}/phone-list.jpg`, type: 'jpeg', quality: 88 });
+await p.screenshot({ path: `${readmeShots}/phone-list.jpg`, type: 'jpeg', quality: 88 });
 await p.screenshot({ path: `${pwa}/narrow.png`, scale: 'css' });
 await p.evaluate((t) => SN.app.openNote(SN.store.findNoteByTitle(t).id), 'Q4 product roadmap');
 await p.waitForTimeout(500);
 await p.evaluate(() => SN.editor.setMode('preview'));
 await p.waitForTimeout(400);
-await p.screenshot({ path: `${docs}/phone-note.jpg`, type: 'jpeg', quality: 88 });
+await p.screenshot({ path: `${readmeShots}/phone-note.jpg`, type: 'jpeg', quality: 88 });
 
 console.log(`Screenshots written (${credentials.length} passkey).`);
 await browser.close();

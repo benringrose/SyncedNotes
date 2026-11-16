@@ -5,7 +5,7 @@ const path = require('path');
 const { chromium } = require('playwright');
 
 const root = path.resolve(__dirname, '../..');
-const out = path.join(root, 'src/SyncedNotes/wwwroot/icons');
+const out = path.join(root, 'SyncedNotes/wwwroot/icons');
 const iconSvg = fs.readFileSync(path.join(out, 'icon.svg'), 'utf8');
 const maskableSvg = fs.readFileSync(path.join(__dirname, 'maskable.svg'), 'utf8');
 
@@ -49,7 +49,7 @@ function ico(pngs) {
   await render(page, shortcutSearch, 96, 'shortcut-search.png', true);
   const favs = [];
   for (const s of [16, 32, 48]) favs.push({ size: s, data: await render(page, iconSvg, s, null, true) });
-  fs.writeFileSync(path.join(root, 'src/SyncedNotes/wwwroot/favicon.ico'), ico(favs));
+  fs.writeFileSync(path.join(root, 'SyncedNotes/wwwroot/favicon.ico'), ico(favs));
   await browser.close();
   console.log('Icons written to', out);
 })();
