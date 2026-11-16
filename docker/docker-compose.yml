@@ -1,0 +1,65 @@
+# SyncedNotes with Docker Compose. The image is built from the Git repository (see Dockerfile), so this folder is
+# all a server needs.
+#
+#   1. cp .env.example .env, then set GIT_PAT (and DOMAIN for HTTPS).
+#   2. docker compose up -d --build                    The app, on http://localhost:8080 on this machine.
+#      docker compose --profile https up -d --build    The app, plus Caddy serving https://DOMAIN.
+#
+# Run the same command again to update to the latest commit.
+
+name: syncednotes
+
+services:
+  syncednotes:
+    build:
+      context: .
+      args:
+        GIT_URL: "${GIT_REPOSITORY:-https://github.com/benringrose/SyncedNotes.git}#${GIT_REF:-main}"
+      secrets:
+        - source: git_pat
+          target: GIT_AUTH_TOKEN
+    image: syncednotes:latest
+    restart: unless-stopped
+    environment:
+      Auth__Registration: ${REGISTRATION:-FirstUserOnly}
+      Passkeys__ServerDomain: ${DOMAIN:-}
+      # Use the visitor's address and scheme from the reverse proxy's X-Forwarded-* headers. That's safe because the
+      # port below only accepts connections from this machine; don't publish it more widely with this set.
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+    ports:
+      - "127.0.0.1:${HTTP_PORT:-8080}:8080"
+    volumes:
+      - data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  # Optional: HTTPS with an automatic certificate for DOMAIN. Ports 80 and 443 must be reachable from the internet.
+  caddy:
+    image: caddy:2
+    profiles:
+      - https
+    restart: unless-stopped
+    command: caddy reverse-proxy --from ${DOMAIN:-localhost} --to syncednotes:8080
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - syncednotes
+
+secrets:
+  git_pat:
+    environment: GIT_PAT
+
+volumes:
+  data:
+  caddy-data:
+  caddy-config:

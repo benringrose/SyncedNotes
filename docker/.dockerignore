@@ -1,0 +1,3 @@
+# The image is built from the Git repository, not from this folder, so send nothing from here to the builder.
+# In particular, this keeps .env, which holds the access token, out of the build.
+*

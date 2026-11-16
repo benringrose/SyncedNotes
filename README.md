@@ -105,6 +105,51 @@ dotnet publish SyncedNotes -c Release -o ./publish
 - Put `DataDirectory` on persistent storage. Notes, images and settings all live in the one SQLite database. While the app is running, back it up with `sqlite3 syncednotes.db ".backup backup.db"`. With the app stopped, you can copy `syncednotes.db`, plus `syncednotes.db-wal` if it exists.
 - The data-protection keys that protect sign-in cookies are stored in the database, so restarts and redeploys don't sign anyone out.
 
+### With Docker
+
+The [`docker`](docker) folder builds the image straight from this GitHub repository, so it's all a server needs. Because the repository is private, the build signs in to GitHub with a personal access token. You need Docker with Compose (`docker compose`) and BuildKit, which is the default builder since Docker 23.
+
+1. Create a [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) with access to only this repository and the **Contents: Read-only** permission.
+2. Copy the `docker` folder to the server, and in that folder create your settings file:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   In `.env`, set `GIT_PAT` to the token and `DOMAIN` to your host name, such as `notes.example.com`. The file describes the other settings.
+
+3. Build and start the app, with Caddy in front of it for HTTPS:
+
+   ```bash
+   docker compose --profile https up -d --build
+   ```
+
+   Caddy gets a certificate for `DOMAIN` automatically. `DOMAIN` must point at the server, and ports 80 and 443 must be reachable from the internet. If you already run a reverse proxy, leave out `--profile https` and point your proxy at `http://127.0.0.1:8080`.
+
+To update, run the same command again. BuildKit checks the branch for new commits on every build. To build another branch or a tag, set `GIT_REF` in `.env`.
+
+- The token reaches the build only as BuildKit's `GIT_AUTH_TOKEN` secret, so it's never stored in the image, its layers or its history. If the build can't fetch the repository, check the token first. Some older Docker Compose releases didn't pass `.env` values to build secrets, so if the token is right, update Compose or set it in the shell with `export GIT_PAT=…`.
+- The app runs as a non-root user on a read-only file system. Its database is in the `syncednotes_data` volume, so it survives rebuilds and updates.
+- To back up, stop the app for a moment and archive the volume:
+
+  ```bash
+  docker compose stop syncednotes
+  ```
+
+  ```bash
+  docker run --rm -v syncednotes_data:/data -v "$PWD":/backup --user root --entrypoint tar syncednotes -czf /backup/syncednotes-backup.tgz -C /data .
+  ```
+
+  ```bash
+  docker compose start syncednotes
+  ```
+
+- To restore `syncednotes-backup.tgz`, run the same `stop` and `start` commands around this one:
+
+  ```bash
+  docker run --rm -v syncednotes_data:/data -v "$PWD":/backup --user root --entrypoint sh syncednotes -c 'rm -f /data/syncednotes.db* && tar -xzf /backup/syncednotes-backup.tgz -C /data'
+  ```
+
 ### Lost every passkey and recovery code?
 
 On the server, run:
@@ -113,7 +158,9 @@ On the server, run:
 dotnet SyncedNotes.dll recovery-codes <username>
 ```
 
-This prints a fresh set of recovery codes. Sign in at `/Account/Recover`, then add a new passkey under **Settings → Security**.
+With Docker, run `docker compose exec syncednotes dotnet SyncedNotes.dll recovery-codes <username>` in the `docker` folder instead.
+
+Either way, this prints a fresh set of recovery codes. Sign in at `/Account/Recover`, then add a new passkey under **Settings → Security**.
 
 ## Using SyncedNotes
 
@@ -178,6 +225,8 @@ SyncedNotes/
   ServiceWorker/sw.js     Service worker (served from /sw.js with a content hash)
   wwwroot/js/core/        util, IndexedDB, sync engine and WebAuthn helpers (shared with the service worker)
   wwwroot/js/app/         jQuery UI modules: store, editor, list, sidebar, commands/palette, lock, settings, PWA
+docker/                   Dockerfile and docker-compose.yml that build and run the app from this repository
+screenshots/              README screenshots
 tests/SyncedNotes.Tests/  xUnit integration tests (WebApplicationFactory)
 tests/e2e/                End-to-end tests (Playwright + virtual passkey authenticator) and screenshot script
 tools/PowerToys/          PowerToys Command Palette extension and setup guide
