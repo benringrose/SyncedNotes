@@ -25,9 +25,45 @@ public sealed class AppSignInService(
     IHttpContextAccessor httpContextAccessor,
     ILogger<AppSignInService> logger)
 {
-    public async Task<(SignInResult Result, AppUser? User)> PasskeySignInAsync(string credentialJson, bool persistent)
+    /// <summary>
+    /// Verifies a newly created passkey. Returns null when no registration ceremony is in progress (it was never
+    /// started or its state expired), which SignInManager reports by throwing.
+    /// </summary>
+    public async Task<PasskeyAttestationResult?> AttestAsync(string credentialJson)
     {
-        var assertion = await signInManager.PerformPasskeyAssertionAsync(credentialJson);
+        try
+        {
+            return await signInManager.PerformPasskeyAttestationAsync(credentialJson);
+        }
+        catch (InvalidOperationException ex)
+        {
+            logger.LogInformation("Passkey attestation without a ceremony in progress: {Message}", ex.Message);
+            return null;
+        }
+    }
+
+    /// <summary>Verifies a passkey assertion. Returns null when no sign-in ceremony is in progress.</summary>
+    public async Task<PasskeyAssertionResult<AppUser>?> AssertAsync(string credentialJson)
+    {
+        try
+        {
+            return await signInManager.PerformPasskeyAssertionAsync(credentialJson);
+        }
+        catch (InvalidOperationException ex)
+        {
+            logger.LogInformation("Passkey assertion without a ceremony in progress: {Message}", ex.Message);
+            return null;
+        }
+    }
+
+    /// <summary>Signs in with a passkey. Result is null when no sign-in ceremony was in progress.</summary>
+    public async Task<(SignInResult? Result, AppUser? User)> PasskeySignInAsync(string credentialJson, bool persistent)
+    {
+        var assertion = await AssertAsync(credentialJson);
+        if (assertion is null)
+        {
+            return (null, null);
+        }
         if (!assertion.Succeeded)
         {
             logger.LogInformation("Passkey assertion failed: {Message}", assertion.Failure?.Message);

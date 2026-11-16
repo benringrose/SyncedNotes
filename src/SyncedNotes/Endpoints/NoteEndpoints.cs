@@ -42,7 +42,8 @@ public static class NoteEndpoints
         api.MapGet("/export", async (ClaimsPrincipal principal, ExportService export, CancellationToken ct) =>
         {
             var stream = await export.CreateZipAsync(principal.GetUserId(), ct);
-            return Results.File(stream, "application/zip", $"SyncedNotes-{DateTime.UtcNow:yyyy-MM-dd}.zip");
+            return Results.File(stream, "application/zip",
+                $"SyncedNotes-{DateTime.UtcNow.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)}.zip");
         });
 
         // Images are referenced from Markdown as /attachments/{id}, so they live outside /api.

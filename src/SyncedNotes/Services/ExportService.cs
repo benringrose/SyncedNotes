@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
@@ -83,7 +84,7 @@ public sealed partial class ExportService(AppDbContext db)
             await using (var writer = new StreamWriter(readme.Open(), new UTF8Encoding(false)))
             {
                 await writer.WriteAsync(
-                    $"SyncedNotes export created {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC.\n" +
+                    $"SyncedNotes export created {DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)} UTC.\n" +
                     $"{notes.Count} notes (Markdown with YAML front matter) and {usedAttachments.Count} images.\n" +
                     "Archived notes are in notes/Archive. These files can be imported back into SyncedNotes.\n");
             }
@@ -112,7 +113,9 @@ public sealed partial class ExportService(AppDbContext db)
         return sb.ToString();
     }
 
-    private static string Iso(long ms) => DateTimeOffset.FromUnixTimeMilliseconds(ms).UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+    // Invariant culture: some server cultures (e.g. ar-SA, th-TH) use non-Gregorian calendars.
+    private static string Iso(long ms) =>
+        DateTimeOffset.FromUnixTimeMilliseconds(ms).UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture);
 
     private static string SafeName(string? value, string fallback)
     {

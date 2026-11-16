@@ -87,7 +87,11 @@ public static partial class AuthEndpoints
             return ApiProblems.BadRequest("The browser didn't provide a passkey.");
         }
 
-        var attestation = await signIn.PerformPasskeyAttestationAsync(request.CredentialJson);
+        var attestation = await appSignIn.AttestAsync(request.CredentialJson);
+        if (attestation is null)
+        {
+            return CeremonyExpired();
+        }
         if (!attestation.Succeeded)
         {
             return ApiProblems.BadRequest("The passkey couldn't be registered.", attestation.Failure?.Message);
@@ -164,6 +168,10 @@ public static partial class AuthEndpoints
         }
 
         var (result, _) = await appSignIn.PasskeySignInAsync(request.CredentialJson, request.RememberMe ?? true);
+        if (result is null)
+        {
+            return CeremonyExpired();
+        }
         if (result.Succeeded)
         {
             return Results.Ok(new { redirect = HttpRequestExtensions.SafeLocalUrl(request.ReturnUrl) });
@@ -214,6 +222,10 @@ public static partial class AuthEndpoints
         var remaining = await recoveryCodes.CountRemainingAsync(user.Id, ct);
         return Results.Ok(new { redirect = "/?recovered=1", remaining });
     }
+
+    /// <summary>The browser finished a passkey ceremony the server has no record of (never started, or expired).</summary>
+    public static IResult CeremonyExpired() =>
+        ApiProblems.BadRequest("The passkey request expired.", "Please try again.");
 
     public static string CleanPasskeyName(string? name)
     {

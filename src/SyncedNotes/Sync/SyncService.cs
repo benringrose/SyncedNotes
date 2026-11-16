@@ -329,8 +329,13 @@ public sealed class SyncService(AppDbContext db, TimeProvider time)
 
         if (change.Deleted)
         {
-            // Don't destroy text that this device has never seen.
-            if (textChangedOnServer) return new ChangeResult(note.Id, ChangeStatus.Conflict, note.Rev);
+            // Don't destroy text that this device has never seen. Bump the revision so the kept version is
+            // included in this response's pull even if the device's cursor is already past the last change.
+            if (textChangedOnServer)
+            {
+                note.Rev = ++state.Seq;
+                return new ChangeResult(note.Id, ChangeStatus.Conflict, note.Rev);
+            }
 
             note.IsDeleted = true;
             note.Title = "";

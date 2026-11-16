@@ -1,6 +1,7 @@
 using System.Buffers.Text;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SyncedNotes.Auth;
 using SyncedNotes.Data;
@@ -99,25 +100,22 @@ public static class SessionEndpoints
         UnlockPasskeyRequest request,
         ClaimsPrincipal principal,
         UserManager<AppUser> users,
-        SignInManager<AppUser> signIn,
-        AppSignInService appSignIn)
+        AppSignInService appSignIn,
+        AppDbContext db)
     {
         var user = await users.GetUserAsync(principal);
         if (user is null) return ApiProblems.Unauthorized("Not signed in.");
         if (string.IsNullOrEmpty(request.CredentialJson)) return ApiProblems.BadRequest("The browser didn't provide a passkey.");
 
-        var assertion = await signIn.PerformPasskeyAssertionAsync(request.CredentialJson);
+        var assertion = await appSignIn.AssertAsync(request.CredentialJson);
+        if (assertion is null) return AuthEndpoints.CeremonyExpired();
         if (!assertion.Succeeded || assertion.User.Id != user.Id)
         {
             return ApiProblems.Unauthorized("That passkey couldn't be verified.");
         }
 
         await users.AddOrUpdatePasskeyAsync(user, assertion.Passkey);
-        if (user.AppLockPinFailures != 0)
-        {
-            user.AppLockPinFailures = 0;
-            await users.UpdateAsync(user);
-        }
+        await ResetPinFailuresAsync(db, user);
         await appSignIn.SetLockedAsync(user, locked: false);
         return Results.Ok(new { locked = false, appLock = LockSettings(user) });
     }
@@ -127,13 +125,24 @@ public static class SessionEndpoints
         ClaimsPrincipal principal,
         UserManager<AppUser> users,
         IPasswordHasher<AppUser> hasher,
-        AppSignInService appSignIn)
+        AppSignInService appSignIn,
+        AppDbContext db)
     {
         var user = await users.GetUserAsync(principal);
         if (user is null) return ApiProblems.Unauthorized("Not signed in.");
-        if (user.AppLockPinHash is null || user.AppLockPinFailures >= MaxPinFailures)
+        if (user.AppLockPinHash is null)
         {
             return ApiProblems.Forbidden("PIN unlock isn't available.", "Unlock with your passkey instead.");
+        }
+
+        // Reserve an attempt atomically before checking the PIN, so guesses sent in parallel all count towards
+        // the limit (a read-increment-write here could let concurrent requests reuse the same attempt).
+        var reserved = await db.Users
+            .Where(u => u.Id == user.Id && u.AppLockPinFailures < MaxPinFailures)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.AppLockPinFailures, u => u.AppLockPinFailures + 1));
+        if (reserved == 0)
+        {
+            return ApiProblems.Forbidden("PIN unlock isn't available.", "Too many incorrect PINs. Unlock with your passkey instead.");
         }
 
         var pin = request.Pin?.Trim() ?? "";
@@ -141,20 +150,23 @@ public static class SessionEndpoints
             hasher.VerifyHashedPassword(user, user.AppLockPinHash, pin) != PasswordVerificationResult.Failed;
         if (!verified)
         {
-            user.AppLockPinFailures++;
-            await users.UpdateAsync(user);
-            var remaining = Math.Max(0, MaxPinFailures - user.AppLockPinFailures);
+            var failures = await db.Users.Where(u => u.Id == user.Id).Select(u => u.AppLockPinFailures).FirstAsync();
+            var remaining = Math.Max(0, MaxPinFailures - failures);
             return remaining == 0
                 ? ApiProblems.Forbidden("Too many incorrect PINs.", "PIN unlock is disabled until you unlock with your passkey.")
                 : ApiProblems.Unauthorized("Incorrect PIN.", $"{remaining} attempt{(remaining == 1 ? "" : "s")} left.");
         }
 
-        if (user.AppLockPinFailures != 0)
-        {
-            user.AppLockPinFailures = 0;
-            await users.UpdateAsync(user);
-        }
+        await ResetPinFailuresAsync(db, user);
         await appSignIn.SetLockedAsync(user, locked: false);
         return Results.Ok(new { locked = false, appLock = LockSettings(user) });
+    }
+
+    private static async Task ResetPinFailuresAsync(AppDbContext db, AppUser user)
+    {
+        await db.Users.Where(u => u.Id == user.Id).ExecuteUpdateAsync(s => s.SetProperty(u => u.AppLockPinFailures, 0));
+        // Keep the tracked entity in step without marking it modified.
+        user.AppLockPinFailures = 0;
+        db.Entry(user).Property(u => u.AppLockPinFailures).IsModified = false;
     }
 }

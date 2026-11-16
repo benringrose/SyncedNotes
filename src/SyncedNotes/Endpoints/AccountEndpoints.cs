@@ -108,7 +108,7 @@ public static partial class AccountEndpoints
     }
 
     private static async Task<IResult> AddPasskeyAsync(
-        AddPasskeyRequest request, ClaimsPrincipal principal, UserManager<AppUser> users, SignInManager<AppUser> signIn)
+        AddPasskeyRequest request, ClaimsPrincipal principal, UserManager<AppUser> users, AppSignInService appSignIn)
     {
         var user = await users.GetUserAsync(principal);
         if (user is null) return ApiProblems.Unauthorized("Not signed in.");
@@ -117,7 +117,8 @@ public static partial class AccountEndpoints
         var existing = await users.GetPasskeysAsync(user);
         if (existing.Count >= 50) return ApiProblems.BadRequest("You have too many passkeys. Remove one first.");
 
-        var attestation = await signIn.PerformPasskeyAttestationAsync(request.CredentialJson);
+        var attestation = await appSignIn.AttestAsync(request.CredentialJson);
+        if (attestation is null) return AuthEndpoints.CeremonyExpired();
         if (!attestation.Succeeded)
         {
             return ApiProblems.BadRequest("The passkey couldn't be added.", attestation.Failure?.Message);

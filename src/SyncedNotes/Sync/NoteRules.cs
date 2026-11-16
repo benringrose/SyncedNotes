@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using SyncedNotes.Data;
@@ -85,9 +86,15 @@ public static partial class NoteRules
 
     public static string ConflictTitle(string title, long now)
     {
-        var stamp = DateTimeOffset.FromUnixTimeMilliseconds(now).UtcDateTime.ToString("yyyy-MM-dd HH:mm");
-        var baseTitle = string.IsNullOrWhiteSpace(title) ? "Untitled" : title;
-        return NormalizeTitle($"{baseTitle} (conflicted copy {stamp} UTC)");
+        var stamp = DateTimeOffset.FromUnixTimeMilliseconds(now).UtcDateTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+        var suffix = $" (conflicted copy {stamp} UTC)";
+        var baseTitle = NormalizeTitle(string.IsNullOrWhiteSpace(title) ? "Untitled" : title);
+        // Shorten long titles rather than cutting off the marker that says this is a conflicted copy.
+        if (baseTitle.Length + suffix.Length > NoteLimits.MaxTitleLength)
+        {
+            baseTitle = baseTitle[..(NoteLimits.MaxTitleLength - suffix.Length)].TrimEnd();
+        }
+        return baseTitle + suffix;
     }
 
     [GeneratedRegex(@"\s+")]

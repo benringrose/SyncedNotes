@@ -17,7 +17,7 @@ public class LoginModel(RegistrationPolicy registration, AppDbContext db) : Page
 
     public async Task<IActionResult> OnGetAsync(string? returnUrl, bool signedOut = false, bool deleted = false)
     {
-        ReturnUrl = HttpRequestExtensions.SafeLocalUrl(returnUrl);
+        ReturnUrl = QuickAddLinkGuardMiddleware.ProtectReturnUrl(Request, HttpRequestExtensions.SafeLocalUrl(returnUrl));
         if (User.Identity?.IsAuthenticated == true)
         {
             return LocalRedirect(ReturnUrl);

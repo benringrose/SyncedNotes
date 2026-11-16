@@ -33,8 +33,11 @@ public static class HttpRequestExtensions
     public static string SafeLocalUrl(string? returnUrl)
     {
         if (string.IsNullOrWhiteSpace(returnUrl)) return "/";
-        // Only allow app-relative paths: "/foo" but not "//evil.com" or "/\evil.com".
-        if (returnUrl[0] == '/' && (returnUrl.Length == 1 || (returnUrl[1] != '/' && returnUrl[1] != '\\')))
+        // Only allow app-relative paths: "/foo" but not "//evil.com" or "/\evil.com". Control characters are
+        // rejected too, because browsers drop tabs and new lines from URLs ("/\t/evil.com" becomes "//evil.com").
+        if (returnUrl[0] == '/' &&
+            (returnUrl.Length == 1 || (returnUrl[1] != '/' && returnUrl[1] != '\\')) &&
+            !returnUrl.Any(char.IsControl))
         {
             return returnUrl;
         }
