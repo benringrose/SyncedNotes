@@ -194,6 +194,40 @@ public class AccountTests(SyncedNotesFactory factory) : IClassFixture<SyncedNote
         Assert.Equal("dark", bobPull.Preferences!.Data.GetProperty("theme").GetString());
     }
 
+    public static TheoryData<string, string> WritesForTheSignedInUser => new()
+    {
+        { "POST", "/api/sync" },
+        { "PUT", "/api/attachments/{id}" },
+        { "POST", "/api/account/tokens" },
+        { "POST", "/api/account/recovery-codes" },
+    };
+
+    [Theory]
+    [MemberData(nameof(WritesForTheSignedInUser))]
+    public async Task Another_device_still_signed_in_to_a_deleted_account_is_told_it_is_signed_out(string method, string path)
+    {
+        // Other devices keep a valid auth cookie until Identity re-validates it (every 30 minutes). Until then their
+        // requests should get the same "Not signed in." 401 that /api/session gives them (the browser client then
+        // asks the user to sign in again) - not a 500 from a foreign-key violation when the endpoint writes rows
+        // for a user that no longer exists.
+        var user = await factory.CreateUserAsync();
+        var thisDevice = factory.CreateClientFor(user);
+        var otherDevice = factory.CreateClientFor(user);
+        await thisDevice.PostJsonAsync("/api/account/delete", new { confirmUserName = user.UserName }).AssertStatusAsync(HttpStatusCode.OK);
+        await otherDevice.GetAsync("/api/session").AssertStatusAsync(HttpStatusCode.Unauthorized);
+
+        var request = new HttpRequestMessage(new HttpMethod(method), path.Replace("{id}", Guid.NewGuid().ToString()))
+        {
+            Content = path.Contains("attachments")
+                ? Bytes(Png())
+                : JsonBody(new { notes = new[] { NewNote("edited offline") }, name = "cli" }),
+        };
+        var response = await otherDevice.SendAsync(request);
+
+        await response.AssertStatusAsync(HttpStatusCode.Unauthorized);
+        Assert.False(await factory.WithDbAsync(db => db.Users.AnyAsync(u => u.Id == user.Id)));
+    }
+
     [Fact]
     public async Task New_accounts_are_seeded_with_starter_binders_and_a_welcome_note()
     {

@@ -18,7 +18,7 @@ public static class NoteEndpoints
         var api = app.MapGroup("/api")
             .RequireAuthorization()
             .AddEndpointFilter<AntiCsrfHeaderFilter>()
-            .AddEndpointFilter<RequireUnlockedFilter>()
+            .AddEndpointFilter<RequireActiveSessionFilter>()
             .WithTags("Notes");
 
         api.MapGet("/sync", (long? since, int? limit, ClaimsPrincipal principal, SyncService sync, CancellationToken ct) =>
@@ -49,7 +49,7 @@ public static class NoteEndpoints
         // Images are referenced from Markdown as /attachments/{id}, so they live outside /api.
         app.MapGet("/attachments/{id:guid}", DownloadAttachmentAsync)
             .RequireAuthorization()
-            .AddEndpointFilter<RequireUnlockedFilter>()
+            .AddEndpointFilter<RequireActiveSessionFilter>()
             .WithTags("Notes");
     }
 

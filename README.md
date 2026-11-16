@@ -99,8 +99,10 @@ Settings live in `appsettings.json` and can be overridden with environment varia
 dotnet publish src/SyncedNotes -c Release -o ./publish
 ```
 
-- Run it behind a reverse proxy that terminates HTTPS, such as Caddy, nginx, IIS or Azure App Service. Behind a proxy, set `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` so the app sees the original scheme and host.
-- Put `DataDirectory` on persistent storage. To back up, copy `syncednotes.db` together with `syncednotes.db-wal`, or use `sqlite3 syncednotes.db ".backup backup.db"`, which is safe while the app is running.
+- Run it behind a reverse proxy that terminates HTTPS, such as Caddy, nginx, IIS or Azure App Service. Behind a proxy:
+  - Set `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` so the app sees the original scheme and the visitor's IP address. Sign-in attempts are rate-limited per IP address, so without this setting every visitor shares the proxy's address and its limit.
+  - Pass the original `Host` header through. Caddy does this by default; in nginx, add `proxy_set_header Host $host;`. Passkeys are tied to the domain, and the links that the quick-add API returns use it too.
+- Put `DataDirectory` on persistent storage. Notes, images and settings all live in the one SQLite database. While the app is running, back it up with `sqlite3 syncednotes.db ".backup backup.db"`. With the app stopped, you can copy `syncednotes.db`, plus `syncednotes.db-wal` if it exists.
 - The data-protection keys that protect sign-in cookies are stored in the database, so restarts and redeploys don't sign anyone out.
 
 ### Lost every passkey and recovery code?
@@ -199,6 +201,8 @@ dotnet build
 ```bash
 dotnet test
 ```
+
+`dotnet test` runs the integration tests in `tests/SyncedNotes.Tests`. They exercise the HTTP API in an in-memory test server with a real SQLite database. They cover sign-in, recovery codes, app lock, sync and conflicts, images, export, API tokens, CSRF and rate limits, and checks that one account can't see another's notes.
 
 End-to-end tests run against a real server in Chromium, with a virtual passkey authenticator.
 

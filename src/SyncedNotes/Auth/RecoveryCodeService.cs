@@ -46,7 +46,10 @@ public sealed class RecoveryCodeService(AppDbContext db, TimeProvider time)
         }
 
         var hash = Hash(normalized);
-        var candidates = await db.RecoveryCodes.Where(r => r.UserId == userId && r.UsedAt == null).ToListAsync(ct);
+        var candidates = await db.RecoveryCodes.AsNoTracking()
+            .Where(r => r.UserId == userId && r.UsedAt == null)
+            .Select(r => new { r.Id, r.CodeHash })
+            .ToListAsync(ct);
         var match = candidates.FirstOrDefault(r =>
             CryptographicOperations.FixedTimeEquals(Encoding.ASCII.GetBytes(r.CodeHash), Encoding.ASCII.GetBytes(hash)));
         if (match is null)
@@ -54,9 +57,12 @@ public sealed class RecoveryCodeService(AppDbContext db, TimeProvider time)
             return false;
         }
 
-        match.UsedAt = time.NowMs();
-        await db.SaveChangesAsync(ct);
-        return true;
+        // Claim the code with a conditional update, so when the same code arrives in parallel only one request wins.
+        var now = time.NowMs();
+        var claimed = await db.RecoveryCodes
+            .Where(r => r.Id == match.Id && r.UsedAt == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(r => r.UsedAt, now), ct);
+        return claimed == 1;
     }
 
     private static string CreateCode()

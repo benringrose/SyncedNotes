@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using SyncedNotes.Data;
+
 namespace SyncedNotes.Infrastructure;
 
 /// <summary>
@@ -34,19 +37,33 @@ public sealed class AntiCsrfHeaderFilter : IEndpointFilter
 }
 
 /// <summary>
-/// Rejects requests from a browser session that is currently locked by the app lock (HTTP 423).
-/// The lock state lives in the encrypted authentication cookie, so it cannot be cleared client-side.
+/// Guards the note and account APIs:
+/// <list type="bullet">
+/// <item>A session whose account no longer exists gets 401, like a signed-out one. After an account is deleted, its
+/// other devices keep a valid cookie until Identity re-validates it (up to 30 minutes), and without this check their
+/// writes would fail with a foreign-key error.</item>
+/// <item>A session locked by the app lock gets 423. The lock state lives in the encrypted authentication cookie, so it
+/// can't be cleared client-side.</item>
+/// </list>
 /// </summary>
-public sealed class RequireUnlockedFilter : IEndpointFilter
+public sealed class RequireActiveSessionFilter : IEndpointFilter
 {
-    public ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        if (context.HttpContext.User.IsAppLocked())
+        var http = context.HttpContext;
+        var userId = http.User.GetUserId();
+        var db = http.RequestServices.GetRequiredService<AppDbContext>();
+        if (!await db.Users.AnyAsync(u => u.Id == userId, http.RequestAborted))
         {
-            return ValueTask.FromResult<object?>(ApiProblems.Problem(
-                StatusCodes.Status423Locked, "The app is locked.", "Unlock the app with your passkey or PIN to continue."));
+            return ApiProblems.Unauthorized("Not signed in.");
         }
 
-        return next(context);
+        if (http.User.IsAppLocked())
+        {
+            return ApiProblems.Problem(
+                StatusCodes.Status423Locked, "The app is locked.", "Unlock the app with your passkey or PIN to continue.");
+        }
+
+        return await next(context);
     }
 }

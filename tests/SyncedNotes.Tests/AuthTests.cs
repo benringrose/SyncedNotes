@@ -252,6 +252,25 @@ public class RecoveryCodeTests(SyncedNotesFactory factory) : IClassFixture<Synce
     }
 
     [Fact]
+    public async Task A_code_redeemed_by_parallel_requests_is_accepted_only_once()
+    {
+        var user = await factory.CreateUserAsync();
+        var codes = await GenerateAsync(user.Id);
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var attempts = Enumerable.Range(0, 8).Select(async _ =>
+        {
+            await start.Task;
+            return await RedeemAsync(user.Id, codes[0]);
+        }).ToList();
+        start.SetResult();
+        var results = await Task.WhenAll(attempts);
+
+        Assert.Single(results, accepted => accepted);
+        Assert.Equal(9, await RemainingAsync(user.Id));
+    }
+
+    [Fact]
     public async Task Codes_are_case_dash_and_whitespace_insensitive()
     {
         var user = await factory.CreateUserAsync();

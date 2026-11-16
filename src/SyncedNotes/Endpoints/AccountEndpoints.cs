@@ -27,7 +27,7 @@ public static partial class AccountEndpoints
         var group = app.MapGroup("/api/account")
             .RequireAuthorization()
             .AddEndpointFilter<AntiCsrfHeaderFilter>()
-            .AddEndpointFilter<RequireUnlockedFilter>()
+            .AddEndpointFilter<RequireActiveSessionFilter>()
             .WithTags("Account");
 
         group.MapGet("/profile", async (ClaimsPrincipal principal, UserManager<AppUser> users) =>
