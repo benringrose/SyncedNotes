@@ -99,37 +99,61 @@ Settings live in `appsettings.json` and can be overridden with environment varia
 dotnet publish SyncedNotes -c Release -o ./publish
 ```
 
-- Run it behind a reverse proxy that terminates HTTPS, such as Caddy, nginx, IIS or Azure App Service. Behind a proxy:
+- Run it behind a reverse proxy that terminates HTTPS, such as a Cloudflare Tunnel, Caddy, nginx, IIS or Azure App Service. Behind a proxy:
   - Set `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` so the app sees the original scheme and the visitor's IP address. Sign-in attempts are rate-limited per IP address, so without this setting every visitor shares the proxy's address and its limit.
   - Pass the original `Host` header through. Caddy does this by default; in nginx, add `proxy_set_header Host $host;`. Passkeys are tied to the domain, and the links that the quick-add API returns use it too.
 - Put `DataDirectory` on persistent storage. Notes, images and settings all live in the one SQLite database. While the app is running, back it up with `sqlite3 syncednotes.db ".backup backup.db"`. With the app stopped, you can copy `syncednotes.db`, plus `syncednotes.db-wal` if it exists.
 - The data-protection keys that protect sign-in cookies are stored in the database, so restarts and redeploys don't sign anyone out.
 
-### With Docker
+### With Docker and a Cloudflare Tunnel
 
-The [`docker`](docker) folder builds the image straight from this GitHub repository, so it's all a server needs. Because the repository is private, the build signs in to GitHub with a personal access token. You need Docker with Compose (`docker compose`) and BuildKit, which is the default builder since Docker 23.
+The [`docker`](docker) folder builds the image straight from this GitHub repository, so it's all a server needs. It runs the app behind a [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/), and **the server publishes no ports**:
+
+- The app is on an internal Docker network. Nothing outside the Compose project can connect to it, and it can't connect out.
+- The `cloudflared` container is the only other container on that network. It opens an outbound connection to Cloudflare, and Cloudflare sends visitors' requests for `https://DOMAIN` back through it to the app.
+- Cloudflare serves HTTPS, so the server needs no certificate and no open inbound ports.
+
+You need Docker with Compose (`docker compose`) and BuildKit, which is the default builder since Docker 23. You also need a domain that uses Cloudflare for its DNS. Because the repository is private, the build signs in to GitHub with a personal access token.
 
 1. Create a [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) with access to only this repository and the **Contents: Read-only** permission.
-2. Copy the `docker` folder to the server, and in that folder create your settings file:
+2. Create the tunnel in the Cloudflare dashboard. The labels below are the current ones; Cloudflare's [guide to creating a tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/) has the latest.
+   1. Go to **Networking** > **Tunnels**, select **Create a tunnel** and give it a name.
+   2. The dashboard then shows a command for installing the connector. Copy the token from it: the long string that starts with `eyJ`. You don't need to run the command.
+   3. On the tunnel's **Routes** tab, select **Add route** > **Published application**. Choose the host name for the app, such as `notes.example.com`, and set the service URL to `http://syncednotes:8080`.
+
+   The route creates a DNS record for the host name, so if the name already has an `A`, `AAAA` or `CNAME` record, delete that first.
+3. Copy the `docker` folder to the server, and in that folder create your settings file:
 
    ```bash
    cp .env.example .env
    ```
 
-   In `.env`, set `GIT_PAT` to the token and `DOMAIN` to your host name, such as `notes.example.com`. The file describes the other settings.
+   In `.env`, set `GIT_PAT` to the GitHub token, `TUNNEL_TOKEN` to the tunnel's token and `DOMAIN` to the host name from the route. The file describes the other settings.
 
-3. Build and start the app, with Caddy in front of it for HTTPS:
+4. Build and start the app and the tunnel:
 
    ```bash
-   docker compose --profile https up -d --build
+   docker compose up -d --build
    ```
 
-   Caddy gets a certificate for `DOMAIN` automatically. `DOMAIN` must point at the server, and ports 80 and 443 must be reachable from the internet. If you already run a reverse proxy, leave out `--profile https` and point your proxy at `http://127.0.0.1:8080`.
+   The tunnel shows as healthy in the dashboard after a few seconds, and the app is at `https://DOMAIN`.
 
-To update, run the same command again. BuildKit checks the branch for new commits on every build. To build another branch or a tag, set `GIT_REF` in `.env`.
+To update, run these two commands in the `docker` folder. The first gets the latest `cloudflared`. The second rebuilds the app from the latest commit, because BuildKit checks the branch for new commits on every build, and restarts whatever changed. To build another branch or a tag, set `GIT_REF` in `.env`.
 
-- The token reaches the build only as BuildKit's `GIT_AUTH_TOKEN` secret, so it's never stored in the image, its layers or its history. If the build can't fetch the repository, check the token first. Some older Docker Compose releases didn't pass `.env` values to build secrets, so if the token is right, update Compose or set it in the shell with `export GIT_PAT=…`.
-- The app runs as a non-root user on a read-only file system. Its database is in the `syncednotes_data` volume, so it survives rebuilds and updates.
+```bash
+docker compose pull cloudflared
+```
+
+```bash
+docker compose up -d --build
+```
+
+- **Network access.** The server needs outbound access to Cloudflare on port 7844 (UDP and TCP), and to GitHub and NuGet while it builds. It needs no inbound ports, so your firewall can block everything except what you use to manage the server, such as SSH.
+- **Keep the app's port unpublished.** The app trusts the `X-Forwarded-For` and `X-Forwarded-Proto` headers that Cloudflare sets. That's how it sees each visitor's address for the sign-in rate limits, and that they used HTTPS, which passkeys require. It's safe only because nothing but `cloudflared` can reach the app. Don't add `ports:` to the `syncednotes` service, because anyone who connected directly could set those headers themselves.
+- **Only the server can reach the app directly.** Like any Docker network, the internal network is reachable from the server itself, at the container's own address, but not from other machines or other containers.
+- **Moving from the earlier Caddy setup?** Keep the same `DOMAIN`, so existing passkeys keep working. Delete the domain's DNS record that pointed at the server before you add the route. Then run `docker compose up -d --build --remove-orphans` once, which removes the old Caddy container. You can then close ports 80 and 443.
+- The GitHub token reaches the build only as BuildKit's `GIT_AUTH_TOKEN` secret, so it's never stored in the image, its layers or its history. If the build can't fetch the repository, check the token first. Some older Docker Compose releases didn't pass `.env` values to build secrets, so if the token is right, update Compose or set it in the shell with `export GIT_PAT=…`.
+- Both containers run as non-root users, on read-only file systems, without Linux capabilities. The app's database is in the `syncednotes_data` volume, so it survives rebuilds and updates.
 - To back up, stop the app for a moment and archive the volume:
 
   ```bash
@@ -225,7 +249,7 @@ SyncedNotes/
   ServiceWorker/sw.js     Service worker (served from /sw.js with a content hash)
   wwwroot/js/core/        util, IndexedDB, sync engine and WebAuthn helpers (shared with the service worker)
   wwwroot/js/app/         jQuery UI modules: store, editor, list, sidebar, commands/palette, lock, settings, PWA
-docker/                   Dockerfile and docker-compose.yml that build and run the app from this repository
+docker/                   Dockerfile and docker-compose.yml that build the app from this repository and run it behind a Cloudflare Tunnel
 screenshots/              README screenshots
 tests/SyncedNotes.Tests/  xUnit integration tests (WebApplicationFactory)
 tests/e2e/                End-to-end tests (Playwright + virtual passkey authenticator) and screenshot script

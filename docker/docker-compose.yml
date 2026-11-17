@@ -1,11 +1,17 @@
-# SyncedNotes with Docker Compose. The image is built from the Git repository (see Dockerfile), so this folder is
-# all a server needs.
+# SyncedNotes with Docker Compose, reached through a Cloudflare Tunnel. The image is built from the Git repository
+# (see Dockerfile), so this folder is all a server needs.
 #
-#   1. cp .env.example .env, then set GIT_PAT (and DOMAIN for HTTPS).
-#   2. docker compose up -d --build                    The app, on http://localhost:8080 on this machine.
-#      docker compose --profile https up -d --build    The app, plus Caddy serving https://DOMAIN.
+# No port is published on the server. The app is on an internal Docker network that nothing outside this project can
+# reach, and that has no route out. The cloudflared container is on that network too, and it opens an outbound
+# connection to Cloudflare, which sends visitors' requests back through it. Cloudflare serves HTTPS for DOMAIN, so the
+# server needs no open inbound ports and no certificate.
 #
-# Run the same command again to update to the latest commit.
+#   1. In the Cloudflare dashboard, create a tunnel, and add a published application route from DOMAIN to the service
+#      URL http://syncednotes:8080.
+#   2. cp .env.example .env, then set GIT_PAT, TUNNEL_TOKEN and DOMAIN.
+#   3. docker compose up -d --build
+#
+# Run the same command again to update the app to the latest commit.
 
 name: syncednotes
 
@@ -23,11 +29,12 @@ services:
     environment:
       Auth__Registration: ${REGISTRATION:-FirstUserOnly}
       Passkeys__ServerDomain: ${DOMAIN:-}
-      # Use the visitor's address and scheme from the reverse proxy's X-Forwarded-* headers. That's safe because the
-      # port below only accepts connections from this machine; don't publish it more widely with this set.
+      # Use the visitor's address and scheme from the X-Forwarded-* headers that Cloudflare sets. That's safe because
+      # only cloudflared can connect to the app. Don't publish a port for this service while this is set.
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
-    ports:
-      - "127.0.0.1:${HTTP_PORT:-8080}:8080"
+    # No "ports:" on purpose. The app is reachable only on the internal network, so the only way in is the tunnel.
+    networks:
+      - internal
     volumes:
       - data:/data
     read_only: true
@@ -38,22 +45,31 @@ services:
     security_opt:
       - no-new-privileges:true
 
-  # Optional: HTTPS with an automatic certificate for DOMAIN. Ports 80 and 443 must be reachable from the internet.
-  caddy:
-    image: caddy:2
-    profiles:
-      - https
+  # Connects out to Cloudflare and passes requests for DOMAIN on to the app. It's the only container on both networks.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
     restart: unless-stopped
-    command: caddy reverse-proxy --from ${DOMAIN:-localhost} --to syncednotes:8080
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    volumes:
-      - caddy-data:/data
-      - caddy-config:/config
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?Set TUNNEL_TOKEN in .env to the token of your Cloudflare Tunnel}
+    networks:
+      - internal
+      - outbound
     depends_on:
       - syncednotes
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  # Docker gives an internal network no gateway: its containers can reach each other, but nothing else can reach
+  # them, they can't reach the internet, and ports can't be published from it.
+  internal:
+    internal: true
+  # cloudflared's route out to Cloudflare.
+  outbound:
 
 secrets:
   git_pat:
@@ -61,5 +77,3 @@ secrets:
 
 volumes:
   data:
-  caddy-data:
-  caddy-config:
