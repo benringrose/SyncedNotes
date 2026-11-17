@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SyncedNotes/SyncedNotes.csproj" />
+  <Folder Name="/tests/">
+    <Project Path="tests/SyncedNotes.Tests/SyncedNotes.Tests.csproj" />
+  </Folder>
+</Solution>

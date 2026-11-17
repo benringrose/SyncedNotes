@@ -1,0 +1,29 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <partial name="_Head" />
+    <title>@ViewData["Title"] · SyncedNotes</title>
+</head>
+<body class="auth-body">
+    <main class="auth-main">
+        <div class="auth-card">
+            <div class="auth-brand">
+                <img src="/icons/icon.svg" alt="" width="56" height="56" />
+                <span>SyncedNotes</span>
+            </div>
+            @RenderBody()
+        </div>
+        <p class="auth-footer">
+            Offline-first Markdown notes ·
+            <button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="btnThemeToggle" title="Switch theme">
+                <i class="bi bi-circle-half"></i> <span>Theme</span>
+            </button>
+        </p>
+    </main>
+    <script src="~/lib/jquery/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/lib/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
+    <script src="~/js/core/passkeys.js" asp-append-version="true"></script>
+    <script src="~/js/account/account.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

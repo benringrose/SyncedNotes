@@ -1,0 +1,14 @@
+# Build output
+bin/
+obj/
+.vs/
+*.user
+AppPackages/
+BundleArtifacts/
+*.msix
+*.msixbundle
+
+# Visual Studio needs these two to deploy the extension as an MSIX package.
+# The standard Visual Studio .gitignore excludes them, so re-include them here.
+!**/Properties/launchSettings.json
+!*.pubxml

@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "SyncedNotes.CmdPal (Package)": {
+      "commandName": "MsixPackage",
+      "doNotLaunchApp": true
+    },
+    "SyncedNotes.CmdPal (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

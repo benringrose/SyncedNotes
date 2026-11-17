@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="sn-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#a855f7"/></linearGradient>
+    <linearGradient id="sn-badge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#0ea371"/></linearGradient>
+    <filter id="sn-shadow" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#1e1b4b" flood-opacity="0.35"/></filter>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#sn-bg)"/>
+  <g filter="url(#sn-shadow)">
+    <path d="M150 92h160l70 70v234a28 28 0 0 1-28 28H150a28 28 0 0 1-28-28V120a28 28 0 0 1 28-28z" fill="#ffffff"/>
+  </g>
+  <path d="M310 92v50a20 20 0 0 0 20 20h50z" fill="#dfe3ff"/>
+  <rect x="160" y="186" width="148" height="22" rx="11" fill="#5b5fe8"/>
+  <rect x="160" y="238" width="182" height="16" rx="8" fill="#c9cefc"/>
+  <rect x="160" y="276" width="160" height="16" rx="8" fill="#c9cefc"/>
+  <rect x="160" y="314" width="104" height="16" rx="8" fill="#c9cefc"/>
+  <g transform="translate(372 384)">
+    <circle r="80" fill="url(#sn-badge)" stroke="#ffffff" stroke-width="14"/>
+    <g fill="none" stroke="#ffffff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M-35.7 -13A38 38 0 0 1 29.1 -24.4"/>
+      <path d="M13.5 -24.4L33 -19.8L31.9 -39.8"/>
+      <path d="M35.7 13A38 38 0 0 1 -29.1 24.4"/>
+      <path d="M-13.5 24.4L-33 19.8L-31.9 39.8"/>
+    </g>
+  </g>
+</svg>
